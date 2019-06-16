@@ -18,19 +18,5 @@
     <ClCompile Include="swim_annotate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="annotate_engine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="supper_annotator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="annotate_engine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="supper_annotator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

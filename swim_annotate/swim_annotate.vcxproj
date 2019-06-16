@@ -154,13 +154,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="annotate_engine.cpp" />
-    <ClCompile Include="supper_annotator.cpp" />
     <ClCompile Include="swim_annotate.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="annotate_engine.h" />
-    <ClInclude Include="supper_annotator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

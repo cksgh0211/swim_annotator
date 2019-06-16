@@ -8,6 +8,7 @@
 #include <opencv2/opencv.hpp> //displaying video
 #include <opencv2/core/types.hpp> //for the rect object
 #include <opencv2/highgui.hpp>
+#include <opencv2/core/utility.hpp>//comandline parcer
 #include <opencv2/video/tracking.hpp>
 #include <opencv2/core/ocl.hpp>
 
@@ -19,15 +20,23 @@ enum class_names {on_block, diving, swimming, underwater, turning, finishing}; /
 struct swim_data
 {
   Rect swimmer_box;
-  int box_class;
-  int lane_num;
+  int box_class = -1;
+  int lane_num = -1;
 };
+
 
 class supper_annotator
 {
 private:
   //processes data
   int number_of_frames;
+
+  //mouse controle vars
+  static bool selectObject;
+  static Point origin;
+  static Rect mouse_box;
+  static int vid_hight;
+  static int vid_width;
   
   //video display data
   VideoCapture an_video;
@@ -102,6 +111,5 @@ public:
 
   //changes the current class lable for the box created
   void change_class();
-
 
 };

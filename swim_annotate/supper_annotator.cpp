@@ -10,6 +10,11 @@ supper_annotator::supper_annotator()
   number_of_frames = -1;
   skip_size = 3;//skip every 2 frames
   current_class = 1;
+
+  //mouse controle
+  selectObject = false;
+  //origin = NULL;
+
   //set box
   current_box.height = 0;
   current_box.width = 0;
@@ -30,6 +35,10 @@ bool supper_annotator::load_video(string video_file)
     double FPS_vid = an_video.get(CAP_PROP_FPS);
     int n = an_video.get(CAP_PROP_FRAME_HEIGHT);//hight
     int m = an_video.get(CAP_PROP_FRAME_WIDTH);//width
+
+    //for the mouse slection
+    vid_hight = n;
+    vid_width = m;
 
     //set class member fields
     number_of_frames = int(an_video.get(CAP_PROP_FRAME_COUNT));
@@ -202,7 +211,7 @@ bool supper_annotator::annotation_options()
   //I want unbuffered input to speed up annotations however this is difficult to do
   // there is an option to maybe use the OpenCV API setMouseCallback however I just
   // want somthing to work for now
-  char answer;
+  char answer = 'z';
   int ans = -1;
 
   cout << "\nOptions for annotation editing.\n\n";
@@ -216,8 +225,8 @@ bool supper_annotator::annotation_options()
   cout << "Stop annotating video, press (8)\n";
   cout << "\nAnnotate F:"<<current_frame<<" L:"<<current_swimmer<< " c:" <<current_class<< "> ";
 
+ 
   cin.ignore(1000, '\n');
-
   cin >> answer;
   
   if (!isdigit(answer)) {
@@ -227,6 +236,7 @@ bool supper_annotator::annotation_options()
   else {
     ans = int(answer) - 48;//convert to int
   }
+
 
   switch (ans) {
   case 1://Change lane number of annotations
@@ -264,6 +274,57 @@ bool supper_annotator::annotation_options()
     cout << "An unrecognised value was input\n";
     break;
   }
+  return true;
+}
+
+//to show box change class object flag
+//primary loop control for supper_annotator class
+bool supper_annotator::display_current_frame()
+{
+  Mat frame;
+  bool display_box = false;
+  swim_data* lane;
+
+  //Get the frame
+  an_video.set(CAP_PROP_POS_FRAMES, current_frame);//CV_CAP_PROP_POS_FRAMES
+  an_video >> frame;
+
+  //Update current box
+  lane = get_swim_data(int(current_frame / skip_size), current_swimmer);//could return an empty lane!!
+  if (lane != nullptr) {
+    if (lane->lane_num == -1) {//if empty lane 
+      display_box = false; //dont display box
+    }
+    else {
+      display_box = true;//display box
+      current_box = lane->swimmer_box;
+    }
+  }
+
+  if (display_box) {
+    rectangle(frame, current_box, Scalar(255, 0, 0), 2, 1);// will create a box in the image frame
+    imshow("Annotating Window", frame);
+    waitKey(1);//cant be zero or makes things annoying 
+  }
+  else {
+    imshow("Annotating Window", frame);
+    waitKey(1);//cant be zero or makes things annoying 
+  }
+  if (annotation_options()) {
+    return true;
+  }
+  return false;//exiting annotator
+}
+
+bool supper_annotator::create_ROI_in_pool()
+{
+  Mat frame;
+  an_video.set(CAP_PROP_POS_FRAMES, current_frame);//CV_CAP_PROP_POS_FRAMES
+  an_video >> frame;
+  current_box = selectROI("Annotating Window", frame, false, false);
+  if (current_box.empty()) return false;
+  save_annotation();
+
   return true;
 }
 
@@ -425,18 +486,6 @@ void supper_annotator::select_lane_number() {
   return;
 }
 
-bool supper_annotator::create_ROI_in_pool()
-{
-  Mat frame;
-  an_video.set(CAP_PROP_POS_FRAMES, current_frame);//CV_CAP_PROP_POS_FRAMES
-  an_video >> frame;
-  current_box = selectROI("Annotating Window", frame, false, false);
-  if(current_box.empty()) return false;
-  save_annotation();
-
-  return true;
-}
-
 
 //Use the camshift() algorithum to find swimmer in next frame
 //Every new frame, update the referance frame
@@ -462,45 +511,6 @@ void supper_annotator::predict_next_frame()
 
 
   return;
-}
-
-//to show box change class object flag
-//primary loop control for supper_annotator class
-bool supper_annotator::display_current_frame()
-{
-  Mat frame;
-  bool display_box = false;
-  swim_data* lane;
-
-  //Get the frame
-  an_video.set(CAP_PROP_POS_FRAMES,current_frame);//CV_CAP_PROP_POS_FRAMES
-  an_video >> frame;
-
-  //Update current box
-  lane = get_swim_data(int(current_frame / skip_size), current_swimmer);//could return an empty lane!!
-  if (lane != nullptr) {
-    if (lane->lane_num == -1) {//if empty lane 
-      display_box = false; //dont display box
-    }
-    else {
-      display_box = true;//display box
-      current_box = lane->swimmer_box;
-    }
-  }
-
-  if (display_box) {
-    rectangle(frame, current_box, Scalar(255, 0, 0), 2, 1);// will create a box in the image frame
-    imshow("Annotating Window",frame);
-    waitKey(1);
-  }
-  else {
-    imshow("Annotating Window", frame);
-    waitKey(1);
-  }
-  if (annotation_options()) {
-    return true;
-  }
-  return false;//exiting annotator
 }
 
 bool supper_annotator::quit_and_save_data()
@@ -635,7 +645,7 @@ supper_annotator::~supper_annotator()
   }
   delete[] all_data;
 }
-
+ 
 
 
 /*
